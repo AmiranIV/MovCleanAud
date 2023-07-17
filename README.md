@@ -8,4 +8,6 @@ in 2 simple steps And I've decided to share it with everyone!
 
 Soon I will upload a version that applies effects and audio processing to make your recording sounds like a professional 
 podcast studio recording for your content SO STAY TUNED!
+
+
 ![Uploading Screenshot 2023-07-17 at 15.39.41.png…]()
