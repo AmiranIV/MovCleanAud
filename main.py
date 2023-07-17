@@ -1,29 +1,63 @@
-import os
+from flask import Flask, request, render_template, send_file
+from werkzeug.utils import secure_filename
 import moviepy.editor as mp
 import librosa
-import librosa.display
 import soundfile as sf
+import tempfile
 import numpy as np
 
-# Load the video file
-video = mp.VideoFileClip('Example.mp4')
+app = Flask(__name__)
 
-# Extract the audio from the video
-audio = video.audio
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-# Save the audio as a temporary WAV file
-temp_wav_file = 'temp_audio.wav'
-audio.write_audiofile(temp_wav_file)
+@app.route('/process_video', methods=['POST'])
+def process_video():
+    # Check if a file was uploaded
+    if 'video_file' not in request.files:
+        return 'No file uploaded'
 
-# Load the temporary WAV file with Librosa
-audio_data, sr = librosa.load(temp_wav_file)
+    video_file = request.files['video_file']
 
-# Perform denoising with Librosa or any other denoising method
-denoised_audio = librosa.decompose.nn_filter(audio_data, aggregate=np.median, metric='cosine',width=int(librosa.time_to_samples(2, sr=sr)))
+    # Generate a secure filename and save the uploaded video file to a temporary location
+    temp_video_file = tempfile.NamedTemporaryFile(suffix='.mov')
+    video_file.save(temp_video_file.name)
 
-# Save the denoised audio as an MP3 file
-output_audio_file = 'output_audio.mp3'
-sf.write(output_audio_file, denoised_audio, sr)
+    # Extract the audio from the video
+    video = mp.VideoFileClip(temp_video_file.name)
+    audio = video.audio
 
-# Cleanup: delete the temporary WAV file
-os.remove(temp_wav_file)
+    # Save the audio as a temporary WAV file
+    temp_audio_file = tempfile.NamedTemporaryFile(suffix='.wav')
+    audio.write_audiofile(temp_audio_file.name)
+
+    # Load the temporary WAV file with Librosa
+    audio_data, sr = librosa.load(temp_audio_file.name)
+
+    # Perform denoising using Librosa
+    denoised_audio, _ = librosa.effects.trim(audio_data)
+
+    # Save the denoised audio as an MP3 file in a temporary location
+    output_audio_file = tempfile.NamedTemporaryFile(suffix='.mp3')
+    sf.write(output_audio_file.name, denoised_audio, sr)
+
+    # Return the denoised audio file to the user
+    return send_file(output_audio_file.name, as_attachment=True)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+import pkg_resources
+
+# Get a list of all installed packages
+installed_packages = pkg_resources.working_set
+
+# Define the path of the requirements text file
+requirements_file = "requirements.txt"
+
+# Open the file in write mode
+with open(requirements_file, "w") as file:
+    # Iterate over the installed packages
+    for package in installed_packages:
+        # Write the package name and version to the file
+        file.write(f"{package.key}=={package.version}\n")
