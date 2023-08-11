@@ -9,3 +9,5 @@ in 2 simple steps And I've decided to share it with everyone!
 Soon I will upload a version that applies effects and audio processing to make your recording sounds like a professional 
 podcast studio recording for your content SO STAY TUNED!
 
+###UPDATE####
+Theres a Code version with uploading to S3 Service in AWS. 
